@@ -40,12 +40,16 @@ export function FileUploader({ onConversionComplete }: FileUploaderProps) {
                 body: formData,
             })
 
+            const data = await response.json()
+
             if (!response.ok) {
-                console.error('❌ [FileUploader] API route error:', response.status)
-                throw new Error(`API route returned ${response.status}`)
+                console.error('❌ [FileUploader] API error:', {
+                    status: response.status,
+                    error: data.error
+                })
+                throw new Error(data.error || `API returned ${response.status}`)
             }
 
-            const data = await response.json()
             console.log('✅ [FileUploader] Received response from API route')
 
             if (data.markdown) {
@@ -54,6 +58,7 @@ export function FileUploader({ onConversionComplete }: FileUploaderProps) {
             }
         } catch (error) {
             console.error('❌ [FileUploader] Error:', error)
+            // TODO: Add user-facing error message
         } finally {
             setIsLoading(false)
         }

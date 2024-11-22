@@ -43,9 +43,15 @@ export async function POST(request: Request) {
         })
 
         if (!response.ok) {
-            const errorText = await response.text()
-            console.error('❌ [API Route] Backend error response:', errorText)
-            throw new Error(`Backend error: ${errorText}`)
+            const errorData = await response.json()
+            console.error('❌ [API Route] Backend error:', {
+                status: response.status,
+                error: errorData
+            })
+            return NextResponse.json(
+                { error: errorData.detail?.error || 'Backend processing failed' },
+                { status: response.status }
+            )
         }
 
         const data = await response.json()
