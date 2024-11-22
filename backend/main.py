@@ -81,3 +81,7 @@ async def convert_document(file: UploadFile = File(...)):
         import traceback
         print(traceback.format_exc())
         return {"error": str(e)}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}

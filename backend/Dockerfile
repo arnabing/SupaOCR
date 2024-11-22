@@ -2,8 +2,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y     build-essential     python3-pip     && rm -rf /var/lib/apt/lists/*
+# Install system dependencies including poppler-utils
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3-pip \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
 COPY requirements.txt .
