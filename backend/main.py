@@ -1,8 +1,9 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from pyzerox import zerox
 import os
 from dotenv import load_dotenv
+import datetime
 
 load_dotenv()
 
@@ -25,7 +26,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["https://supaocr.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -82,6 +83,10 @@ async def convert_document(file: UploadFile = File(...)):
         print(traceback.format_exc())
         return {"error": str(e)}
 
+@app.get("/")
+async def root():
+    return {"status": "ok"}
+
 @app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
+async def health():
+    return {"status": "ok"}

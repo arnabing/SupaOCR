@@ -33,21 +33,29 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 # Environment variables
-.env
 .env.local
 .env.*
 !.env.example
+.env
+venv/
+.venv/
+env/
 
-# Dependencies
+# Node
 node_modules/
 venv/
-
 # Build outputs
 dist/
 build/
+# IDE
+.vscode/
+.idea/
 
-# System files
+# System
 .DS_Store
 backend/.env
