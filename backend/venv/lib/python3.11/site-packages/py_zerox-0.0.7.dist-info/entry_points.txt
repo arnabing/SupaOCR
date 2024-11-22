@@ -1,0 +1,2 @@
+[console_scripts]
+py-zerox-pre-install = py_zerox.scripts.pre_install:check_and_install

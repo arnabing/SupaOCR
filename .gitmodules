@@ -1,0 +1,3 @@
+[submodule "zerox"]
+	path = zerox
+	url = https://github.com/getomni-ai/zerox.git

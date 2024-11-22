@@ -1,0 +1,5 @@
+fastapi==0.115.5
+uvicorn==0.32.1
+python-multipart==0.0.17
+python-dotenv==1.0.0
+py-zerox==0.0.7
