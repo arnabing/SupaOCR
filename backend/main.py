@@ -17,12 +17,9 @@ openai_key = os.getenv('OPENAI_API_KEY')
 # Validate API key
 if not openai_key:
     print("❌ [Init] No OpenAI API key found")
-elif not openai_key.startswith('sk-'):
-    print("❌ [Init] Invalid OpenAI key format. Should start with 'sk-'")
-elif 'proj' in openai_key:
-    print("❌ [Init] Detected project-specific key. Please use OpenAI API key")
+    raise Exception("OpenAI API key not found in environment")
 else:
-    print("✅ [Init] OpenAI API key format valid")
+    print("✅ [Init] OpenAI API key found")
 
 print(f"🔑 [Init] Using model: gpt-4o-mini")
 
@@ -50,6 +47,11 @@ logger.addHandler(handler)
 
 @app.post("/convert")
 async def convert_document(file: UploadFile = File(...)):
+    if not openai_key:
+        raise HTTPException(
+            status_code=500,
+            detail="OpenAI API key not configured"
+        )
     try:
         print("\n📄 [File] Received:", file.filename)
         print(f"📄 [File] Type: {file.content_type}")
