@@ -4,6 +4,10 @@ from pyzerox import zerox
 import os
 from dotenv import load_dotenv
 import datetime
+import logging
+from fastapi import HTTPException
+import sys
+import traceback
 
 load_dotenv()
 
@@ -24,13 +28,22 @@ print(f"🔑 [Init] Using model: gpt-4o-mini")
 
 app = FastAPI()
 
+# Get the frontend URL from environment
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://your-vercel-app.vercel.app')
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://supaocr.vercel.app"],
+    allow_origins=["https://supaocr.vercel.app/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+logger = logging.getLogger("supaocr")
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger.addHandler(handler)
 
 @app.post("/convert")
 async def convert_document(file: UploadFile = File(...)):
@@ -90,3 +103,36 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+@app.post("/process")
+async def process_file(file: UploadFile):
+    try:
+        logger.info(f"Processing file: {file.filename}")
+        logger.debug(f"File content type: {file.content_type}")
+        
+        # Save file temporarily
+        file_path = f"/tmp/{file.filename}"
+        content = await file.read()
+        logger.debug(f"File size: {len(content)} bytes")
+        
+        with open(file_path, "wb") as f:
+            f.write(content)
+            
+        # Process with zerox
+        logger.info("Starting zerox processing")
+        result = await zerox(
+            file_path=file_path,
+            model="gpt-4o-mini",
+            cleanup=True
+        )
+        logger.info("Zerox processing complete")
+        
+        return {"markdown": "\n\n".join(page.content for page in result.pages)}
+        
+    except Exception as e:
+        logger.error(f"Error processing file: {str(e)}")
+        logger.error("Traceback:", exc_info=True)
+        raise HTTPException(
+            status_code=500, 
+            detail={"error": str(e), "traceback": traceback.format_exc()}
+        )
