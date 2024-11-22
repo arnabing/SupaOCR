@@ -3,63 +3,53 @@ import { NextResponse } from 'next/server'
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
 
 export async function POST(request: Request) {
-    console.log('🔵 [API Route] Starting file conversion request')
-    console.log('🌐 [API Route] Using backend URL:', BACKEND_URL)
+    console.log('🔵 [Debug] BACKEND_URL:', BACKEND_URL)
 
     try {
         const formData = await request.formData()
         const file = formData.get('file') as File
-        console.log('📁 [API Route] File received:', {
+
+        // Log file details
+        console.log('📋 [Debug] File details:', {
             name: file?.name,
-            size: `${(file?.size || 0) / 1024} KB`,
-            type: file?.type
+            size: file?.size ? `${file.size / 1024} KB` : 'unknown',
+            type: file?.type || 'unknown'
         })
 
-        if (!file) {
-            console.log('❌ [API Route] No file provided')
-            return NextResponse.json(
-                { error: 'No file provided' },
-                { status: 400 }
-            )
-        }
+        // Log request to backend
+        console.log('📤 [Debug] Sending to:', `${BACKEND_URL}/convert`)
 
-        console.log(`🌐 [API Route] Sending to backend: ${BACKEND_URL}/convert`)
         const response = await fetch(`${BACKEND_URL}/convert`, {
             method: 'POST',
             body: formData,
-        }).catch(error => {
-            console.error('🔴 [API Route] Network error:', {
-                message: error.message,
-                cause: error.cause
-            })
-            throw error
         })
 
-        if (!response.ok) {
-            const errorData = await response.json()
-            console.error('❌ [API Route] Backend error:', {
-                status: response.status,
-                error: errorData
-            })
-            return NextResponse.json(
-                { error: errorData.error || 'Backend processing failed' },
-                { status: response.status }
-            )
+        // Log backend response
+        console.log('📥 [Debug] Backend response:', {
+            status: response.status,
+            ok: response.ok,
+            type: response.type
+        })
+
+        const responseText = await response.text()
+        console.log('📄 [Debug] Response text:', responseText)
+
+        // Try to parse as JSON
+        let data
+        try {
+            data = JSON.parse(responseText)
+        } catch (e) {
+            console.error('❌ [Debug] Failed to parse response as JSON:', responseText)
+            throw new Error('Invalid JSON response from backend')
         }
 
-        const data = await response.json()
-        console.log('✅ [API Route] Success:', {
-            markdownLength: data.markdown?.length || 0
-        })
         return NextResponse.json(data)
     } catch (error: any) {
-        console.error('💥 [API Route] Error:', {
-            name: error?.name,
-            message: error?.message
+        console.error('💥 [Debug] Full error:', {
+            message: error?.message,
+            cause: error?.cause,
+            stack: error?.stack
         })
-        return NextResponse.json(
-            { error: 'Failed to process file' },
-            { status: 500 }
-        )
+        return NextResponse.json({ error: 'Failed to process file' }, { status: 500 })
     }
 } 

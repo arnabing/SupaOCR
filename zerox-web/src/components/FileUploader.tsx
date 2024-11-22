@@ -28,11 +28,11 @@ export function FileUploader({ onConversionComplete }: FileUploaderProps) {
         if (!file) return
         console.log('📤 [FileUploader] Starting file conversion for:', file.name)
         setIsLoading(true)
-
+        setIsLoading(true)
         const formData = new FormData()
         formData.append('file', file)
         console.log('📦 [FileUploader] FormData created with file')
-
+        console.log('📦 [FileUploader] FormData created with file')
         try {
             console.log('🔄 [FileUploader] Sending request to API route')
             const response = await fetch('/api/convert', {
