@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         const file = formData.get('file') as File
         console.log('📁 [API Route] File received:', {
             name: file?.name,
-            size: file?.size,
+            size: `${(file?.size || 0) / 1024} KB`,
             type: file?.type
         })
 
@@ -23,23 +23,16 @@ export async function POST(request: Request) {
             )
         }
 
-        console.log(`🌐 [API Route] Sending to backend: ${BACKEND_URL}/process`)
-        const response = await fetch(`${BACKEND_URL}/process`, {
+        console.log(`🌐 [API Route] Sending to backend: ${BACKEND_URL}/convert`)
+        const response = await fetch(`${BACKEND_URL}/convert`, {
             method: 'POST',
             body: formData,
         }).catch(error => {
             console.error('🔴 [API Route] Network error:', {
                 message: error.message,
-                cause: error.cause,
-                stack: error.stack
+                cause: error.cause
             })
             throw error
-        })
-
-        console.log('📡 [API Route] Backend response:', {
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries())
         })
 
         if (!response.ok) {
@@ -49,20 +42,20 @@ export async function POST(request: Request) {
                 error: errorData
             })
             return NextResponse.json(
-                { error: errorData.detail?.error || 'Backend processing failed' },
+                { error: errorData.error || 'Backend processing failed' },
                 { status: response.status }
             )
         }
 
         const data = await response.json()
-        console.log('✅ [API Route] Successfully received response')
+        console.log('✅ [API Route] Success:', {
+            markdownLength: data.markdown?.length || 0
+        })
         return NextResponse.json(data)
     } catch (error: any) {
-        console.error('💥 [API Route] Error details:', {
+        console.error('💥 [API Route] Error:', {
             name: error?.name,
-            message: error?.message,
-            stack: error?.stack,
-            cause: error?.cause
+            message: error?.message
         })
         return NextResponse.json(
             { error: 'Failed to process file' },
