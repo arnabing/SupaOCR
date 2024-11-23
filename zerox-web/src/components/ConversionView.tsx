@@ -13,6 +13,10 @@ export function ConversionView({ markdown, file }: ConversionViewProps) {
     const [previewUrl, setPreviewUrl] = useState<string>()
 
     useEffect(() => {
+        console.log('📝 [ConversionView] Received markdown update:', markdown?.length ?? 0)
+    }, [markdown])
+
+    useEffect(() => {
         if (file) {
             const url = URL.createObjectURL(file)
             setPreviewUrl(url)

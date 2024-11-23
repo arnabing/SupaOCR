@@ -9,6 +9,7 @@ export default function Home() {
   const [previewFile, setPreviewFile] = useState<File>()
 
   const handleConversionComplete = (markdown: string, file: File) => {
+    console.log('🔄 [Home] Updating markdown state, length:', markdown.length)
     setMarkdown(markdown)
     setPreviewFile(file)
   }

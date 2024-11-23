@@ -54,14 +54,17 @@ export function FileUploader({ onConversionComplete }: FileUploaderProps) {
             })
 
             if (!response.ok) {
+                console.error('❌ [FileUploader] Response not OK:', response.status)
                 throw new Error(`API returned ${response.status}`)
             }
 
             const data = await response.json() as ConversionResponse
-            console.log('✅ [FileUploader] Received response:', data)
+            console.log('📄 [FileUploader] Pages received:', data.pages?.length)
+            console.log('📊 [FileUploader] Stats:', data.stats)
 
             if (data.pages) {
                 const markdown = data.pages.map((p: PageContent) => p.content).join('\n\n---\n\n')
+                console.log('✨ [FileUploader] Generated markdown length:', markdown.length)
                 onConversionComplete(markdown, file)
             } else {
                 throw new Error('Invalid response format')
