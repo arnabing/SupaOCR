@@ -9,7 +9,7 @@ from fastapi import HTTPException
 import sys
 import traceback
 from fastapi.responses import JSONResponse
-from litellm import set_verbose
+from litellm import litellm
 
 load_dotenv()
 
@@ -104,7 +104,12 @@ async def convert_document(file: UploadFile = File(...)):
             result = await zerox(
                 file_path=file_path,
                 model="gpt-4o-mini",
-                cleanup=True
+                cleanup=True,
+                litellm_params={
+                    "api_base": "https://api.omnitool.ai/v1",
+                    "api_key": openai_key,
+                    "api_type": "openai"
+                }
             )
         except Exception as zerox_error:
             logger.error(f"Zerox processing error: {str(zerox_error)}")
@@ -222,4 +227,4 @@ async def test_openai():
             "key_prefix": openai_key[:8] if openai_key else None
         }
 
-set_verbose(True)
+litellm.set_verbose = True
