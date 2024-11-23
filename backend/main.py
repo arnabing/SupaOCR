@@ -35,7 +35,7 @@ os.environ["LITELLM_MODEL_CONFIG"] = """{
                 "api_type": "openai"
             }
         }
-    ]
+    ],
 }""" % openai_key
 
 print(f"🔑 [Init] Using model: gpt-4o-mini")
@@ -105,11 +105,6 @@ async def convert_document(file: UploadFile = File(...)):
                 file_path=file_path,
                 model="gpt-4o-mini",
                 cleanup=True,
-                litellm_params={
-                    "api_base": "https://api.omnitool.ai/v1",
-                    "api_key": openai_key,
-                    "api_type": "openai"
-                }
             )
         except Exception as zerox_error:
             logger.error(f"Zerox processing error: {str(zerox_error)}")
