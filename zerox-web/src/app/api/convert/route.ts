@@ -24,42 +24,21 @@ export async function POST(request: Request) {
         const response = await fetch(`${BACKEND_URL}/convert`, {
             method: 'POST',
             body: formData,
+            signal: AbortSignal.timeout(120000)
         })
 
-        const responseText = await response.text()
-        console.log('📥 [Debug] Raw response:', responseText)
+        const data = await response.json()
+        console.log('📥 [Debug] Response data:', data)
 
-        try {
-            const data = JSON.parse(responseText)
-
-            if (!response.ok || data.error) {
-                console.error('❌ [Debug] Backend error:', {
-                    status: response.status,
-                    error: data.error,
-                    type: data.type,
-                    requestId: data.request_id
-                })
-
-                return NextResponse.json({
-                    error: data.error || 'Backend processing failed',
-                    requestId: data.request_id
-                }, { status: response.status })
-            }
-
-            console.log('✅ [Debug] Conversion successful:', {
-                requestId: data.request_id,
-                stats: data.stats
-            })
-
-            return NextResponse.json(data)
-
-        } catch (parseError) {
-            console.error('❌ [Debug] Failed to parse response:', responseText)
+        if (!response.ok || data.error) {
+            console.error('❌ [Debug] Backend error:', data)
             return NextResponse.json({
-                error: 'Invalid response from backend',
-                details: responseText
-            }, { status: 500 })
+                error: data.error || 'Backend processing failed',
+                details: data.traceback
+            }, { status: response.status || 500 })
         }
+
+        return NextResponse.json(data)
     } catch (error: any) {
         console.error('💥 [Debug] Request failed:', error)
         return NextResponse.json({

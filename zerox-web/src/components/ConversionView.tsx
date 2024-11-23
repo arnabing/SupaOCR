@@ -25,11 +25,13 @@ export function ConversionView({ markdown, file }: ConversionViewProps) {
                 <h2 className="text-lg font-semibold mb-2">Original Document</h2>
                 <div className="min-h-[400px] bg-muted rounded-lg p-4 overflow-hidden relative">
                     {previewUrl && (
-                        <embed
-                            src={previewUrl}
+                        <object
+                            data={previewUrl}
                             type="application/pdf"
                             className="absolute inset-0 w-full h-full object-contain rounded border border-muted"
-                        />
+                        >
+                            <p>PDF preview not available</p>
+                        </object>
                     )}
                 </div>
             </Card>

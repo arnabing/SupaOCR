@@ -28,38 +28,33 @@ export function FileUploader({ onConversionComplete }: FileUploaderProps) {
         if (!file) return
         console.log('📤 [FileUploader] Starting file conversion for:', file.name)
         setIsLoading(true)
-        setIsLoading(true)
         const formData = new FormData()
         formData.append('file', file)
-        console.log('📦 [FileUploader] FormData created with file')
-        console.log('📦 [FileUploader] FormData created with file')
+
         try {
             console.log('🔄 [FileUploader] Sending request to API route')
             const response = await fetch('/api/convert', {
                 method: 'POST',
                 body: formData,
+                signal: AbortSignal.timeout(120000) // 2 minute timeout
             })
 
-            const data = await response.json()
-
             if (!response.ok) {
-                console.error('❌ [FileUploader] API error:', {
-                    status: response.status,
-                    error: data.error
-                })
-                throw new Error(data.error || `API returned ${response.status}`)
+                throw new Error(`API returned ${response.status}`)
             }
 
-            console.log('✅ [FileUploader] Received response from API route')
+            const data = await response.json()
+            console.log('✅ [FileUploader] Received response:', data)
 
             if (data.markdown) {
                 console.log('📝 [FileUploader] Markdown received, updating view')
                 onConversionComplete(data.markdown, file)
+                setIsLoading(false)
+            } else {
+                throw new Error('No markdown in response')
             }
         } catch (error) {
             console.error('❌ [FileUploader] Error:', error)
-            // TODO: Add user-facing error message
-        } finally {
             setIsLoading(false)
         }
     }
