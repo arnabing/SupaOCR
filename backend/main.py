@@ -22,6 +22,20 @@ if not openai_key:
 else:
     print("✅ [Init] OpenAI API key found")
 
+# Configure LiteLLM for Omni provider
+os.environ["LITELLM_MODEL_CONFIG"] = """{
+    "model_list": [
+        {
+            "model_name": "gpt-4o-mini",
+            "litellm_params": {
+                "model": "gpt-4o-mini",
+                "api_base": "https://api.omnitool.ai/v1",
+                "api_key": "%s"
+            }
+        }
+    ]
+}""" % openai_key
+
 print(f"🔑 [Init] Using model: gpt-4o-mini")
 
 app = FastAPI()
@@ -90,7 +104,11 @@ async def convert_document(file: UploadFile = File(...)):
                 model="gpt-4o-mini",
                 openai_api_key=openai_key,
                 cleanup=True,
-                debug=True  # Enable debug mode
+                debug=True,
+                provider_config={
+                    "api_base": "https://api.omnitool.ai/v1",
+                    "api_key": openai_key
+                }
             )
         except Exception as zerox_error:
             logger.error(f"Zerox processing error: {str(zerox_error)}")
@@ -186,14 +204,17 @@ async def test_openai():
         
         # Test with a simple completion
         response = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": "Hello"}]
+            model="gpt-4-vision-preview",  # Try the official model name
+            messages=[{
+                "role": "user", 
+                "content": "Hello, can you see this message?"
+            }]
         )
         
         return {
             "status": "ok",
             "message": "OpenAI API key is working",
-            "model": "gpt-4o-mini",
+            "model": "gpt-4-vision-preview",
             "response": response.choices[0].message.content
         }
     except Exception as e:
@@ -201,5 +222,6 @@ async def test_openai():
         return {
             "status": "error",
             "error": str(e),
-            "message": "OpenAI API key test failed"
+            "message": "OpenAI API key test failed",
+            "key_prefix": openai_key[:8] if openai_key else None
         }
