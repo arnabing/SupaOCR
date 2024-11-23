@@ -10,6 +10,21 @@ interface FileUploaderProps {
     onConversionComplete: (markdown: string, file: File) => void
 }
 
+interface PageContent {
+    content: string;
+    page_number: number;
+}
+
+interface ConversionResponse {
+    pages: PageContent[];
+    request_id: string;
+    stats: {
+        file_size: number;
+        total_pages: number;
+        total_chars: number;
+    };
+}
+
 export function FileUploader({ onConversionComplete }: FileUploaderProps) {
     const [file, setFile] = useState<File | null>(null)
     const [isLoading, setIsLoading] = useState(false)
@@ -26,35 +41,34 @@ export function FileUploader({ onConversionComplete }: FileUploaderProps) {
 
     const handleConvert = async () => {
         if (!file) return
-        console.log('📤 [FileUploader] Starting file conversion for:', file.name)
         setIsLoading(true)
         const formData = new FormData()
         formData.append('file', file)
 
         try {
-            console.log('🔄 [FileUploader] Sending request to API route')
+            console.log('🔄 [FileUploader] Starting conversion')
             const response = await fetch('/api/convert', {
                 method: 'POST',
                 body: formData,
-                signal: AbortSignal.timeout(120000) // 2 minute timeout
+                signal: AbortSignal.timeout(120000)
             })
 
             if (!response.ok) {
                 throw new Error(`API returned ${response.status}`)
             }
 
-            const data = await response.json()
+            const data = await response.json() as ConversionResponse
             console.log('✅ [FileUploader] Received response:', data)
 
-            if (data.markdown) {
-                console.log('📝 [FileUploader] Markdown received, updating view')
-                onConversionComplete(data.markdown, file)
-                setIsLoading(false)
+            if (data.pages) {
+                const markdown = data.pages.map((p: PageContent) => p.content).join('\n\n---\n\n')
+                onConversionComplete(markdown, file)
             } else {
-                throw new Error('No markdown in response')
+                throw new Error('Invalid response format')
             }
         } catch (error) {
             console.error('❌ [FileUploader] Error:', error)
+        } finally {
             setIsLoading(false)
         }
     }

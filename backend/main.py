@@ -110,18 +110,19 @@ async def convert_document(file: UploadFile = File(...)):
             logger.error(f"Zerox processing error: {str(zerox_error)}")
             raise
         
-        # Generate response
-        markdown = "\n\n".join(page.content for page in result.pages)
-        logger.info(f"Conversion complete. Generated {len(markdown)} chars of markdown")
-        
+        # Return full Zerox output
         return JSONResponse(
             status_code=200,
             content={
-                "markdown": markdown,
+                "pages": [{
+                    "content": page.content,
+                    "page_number": idx + 1
+                } for idx, page in enumerate(result.pages)],
                 "request_id": request_id,
                 "stats": {
                     "file_size": file_size,
-                    "markdown_length": len(markdown)
+                    "total_pages": len(result.pages),
+                    "total_chars": sum(len(page.content) for page in result.pages)
                 }
             }
         )

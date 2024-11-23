@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
+import ReactMarkdown from 'react-markdown'
 
 interface ConversionViewProps {
     markdown?: string
@@ -37,8 +38,12 @@ export function ConversionView({ markdown, file }: ConversionViewProps) {
             </Card>
             <Card className="p-4">
                 <h2 className="text-lg font-semibold mb-2">Markdown Output</h2>
-                <div className="min-h-[400px] bg-muted rounded-lg p-4 font-mono text-sm whitespace-pre-wrap overflow-auto">
-                    {markdown || 'Converted markdown will appear here'}
+                <div className="min-h-[400px] bg-muted rounded-lg p-4 prose prose-sm max-w-none overflow-auto">
+                    {markdown ? (
+                        <ReactMarkdown>{markdown}</ReactMarkdown>
+                    ) : (
+                        'Converted markdown will appear here'
+                    )}
                 </div>
             </Card>
         </div>
