@@ -33,7 +33,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://supaocr.vercel.app",
-        "http://localhost:3000"
+        "http://localhost:3000",
+        "https://supaocr-backend-production.up.railway.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -125,7 +126,14 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "environment": {
+            "frontend_url": os.getenv('FRONTEND_URL'),
+            "port": os.getenv('PORT'),
+            "api_key_configured": bool(openai_key)
+        }
+    }
 
 @app.post("/process")
 async def process_file(file: UploadFile):
