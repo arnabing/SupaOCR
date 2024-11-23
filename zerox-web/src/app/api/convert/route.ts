@@ -27,6 +27,20 @@ export async function POST(request: Request) {
             signal: AbortSignal.timeout(120000)
         })
 
+        if (!response.ok) {
+            console.error('❌ [Debug] Backend error:', {
+                status: response.status,
+                statusText: response.statusText,
+                url: response.url
+            })
+            const errorText = await response.text()
+            console.error('❌ [Debug] Error response:', errorText)
+            return NextResponse.json({
+                error: `Backend failed with status ${response.status}`,
+                details: errorText
+            }, { status: response.status })
+        }
+
         const data = await response.json()
         console.log('📥 [Debug] Response data:', data)
 

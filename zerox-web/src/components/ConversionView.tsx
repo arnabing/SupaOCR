@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface ConversionViewProps {
     markdown?: string
@@ -44,7 +45,9 @@ export function ConversionView({ markdown, file }: ConversionViewProps) {
                 <h2 className="text-lg font-semibold mb-2">Markdown Output</h2>
                 <div className="min-h-[400px] bg-muted rounded-lg p-4 prose prose-sm max-w-none overflow-auto">
                     {markdown ? (
-                        <ReactMarkdown>{markdown}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {markdown}
+                        </ReactMarkdown>
                     ) : (
                         'Converted markdown will appear here'
                     )}

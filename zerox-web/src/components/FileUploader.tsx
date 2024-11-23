@@ -63,7 +63,7 @@ export function FileUploader({ onConversionComplete }: FileUploaderProps) {
             console.log('📊 [FileUploader] Stats:', data.stats)
 
             if (data.pages) {
-                const markdown = data.pages.map((p: PageContent) => p.content).join('\n\n---\n\n')
+                const markdown = data.pages.map((p: PageContent) => p.content).join('\n')
                 console.log('✨ [FileUploader] Generated markdown length:', markdown.length)
                 onConversionComplete(markdown, file)
             } else {

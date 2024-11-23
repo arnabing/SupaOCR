@@ -10,6 +10,7 @@ import sys
 import traceback
 from fastapi.responses import JSONResponse
 from litellm import litellm
+from time import time
 
 load_dotenv()
 
@@ -71,46 +72,74 @@ print("PORT:", os.getenv('PORT', '✗ Missing'))
 
 @app.post("/convert")
 async def convert_document(file: UploadFile = File(...)):
+    start_time = time()
     request_id = datetime.datetime.now().isoformat()
     logger.info(f"=== Starting Conversion (Request ID: {request_id}) ===")
     
-    # Validate environment
-    if not openai_key:
-        logger.error("OpenAI API key missing")
-        raise HTTPException(
-            status_code=500,
-            detail={"error": "OpenAI API key not configured", "request_id": request_id}
-        )
-
     try:
-        # Log OpenAI key details (first 8 chars only)
-        logger.info(f"Using OpenAI key starting with: {openai_key[:8]}...")
+        # Add timeout tracking
+        logger.info(f"⏱️ Request started at: {start_time}")
         
-        # Log file details
-        logger.info(f"File received: {file.filename} ({file.content_type})")
+        # Log detailed file information
+        logger.info(f"📁 File details:")
+        logger.info(f"  - Filename: {file.filename}")
+        logger.info(f"  - Content type: {file.content_type}")
+        logger.info(f"  - File object type: {type(file)}")
         
-        # Save file temporarily
+        # Log memory info before file operations
+        logger.info("💾 Memory check before file operations:")
+        logger.info(f"  - /tmp directory exists: {os.path.exists('/tmp')}")
+        logger.info(f"  - /tmp directory writable: {os.access('/tmp', os.W_OK)}")
+        
+        # Save file with more detailed logging
         file_path = f"/tmp/{file.filename}"
-        with open(file_path, "wb") as f:
+        try:
             content = await file.read()
-            f.write(content)
-        
-        file_size = os.path.getsize(file_path)
-        logger.info(f"File saved: {file_path} ({file_size/1024:.1f} KB)")
+            logger.info(f"📄 Read file content:")
+            logger.info(f"  - Content size: {len(content)} bytes")
+            logger.info(f"  - Content type: {type(content)}")
+            
+            with open(file_path, "wb") as f:
+                f.write(content)
+                
+            if os.path.exists(file_path):
+                file_size = os.path.getsize(file_path)
+                logger.info(f"✅ File saved successfully:")
+                logger.info(f"  - Path: {file_path}")
+                logger.info(f"  - Size: {file_size/1024:.1f} KB")
+            else:
+                logger.error("❌ File not saved properly")
+                
+        except Exception as file_error:
+            logger.error(f"❌ File handling error: {str(file_error)}")
+            logger.error(traceback.format_exc())
+            raise HTTPException(
+                status_code=500,
+                detail={"error": "File handling failed", "details": str(file_error)}
+            )
+
+        # Log zerox configuration
+        logger.info("🔧 Zerox configuration:")
+        logger.info(f"  - Model: gpt-4o-mini")
+        logger.info(f"  - OpenAI key length: {len(openai_key)}")
+        logger.info(f"  - API base: {os.getenv('OPENAI_API_BASE', 'default')}")
 
         # Process with zerox
-        logger.info(f"Starting zerox processing with model: gpt-4o-mini")
         try:
+            logger.info(f"🚀 Starting zerox at: {time() - start_time:.2f}s elapsed")
             result = await zerox(
                 file_path=file_path,
                 model="gpt-4o-mini",
                 cleanup=True,
             )
+            logger.info(f"✅ Zerox completed at: {time() - start_time:.2f}s elapsed")
+            
         except Exception as zerox_error:
-            logger.error(f"Zerox processing error: {str(zerox_error)}")
+            logger.error(f"❌ Zerox error at {time() - start_time:.2f}s: {str(zerox_error)}")
+            logger.error(f"Zerox error type: {type(zerox_error)}")
+            logger.error(traceback.format_exc())
             raise
-        
-        # Return full Zerox output
+
         return JSONResponse(
             status_code=200,
             content={
@@ -128,19 +157,11 @@ async def convert_document(file: UploadFile = File(...)):
         )
 
     except Exception as e:
-        logger.error(f"Error processing request {request_id}: {str(e)}")
-        logger.error("Traceback:", exc_info=True)
-        
-        error_detail = {
-            "error": str(e),
-            "type": type(e).__name__,
-            "traceback": traceback.format_exc(),
-            "request_id": request_id
-        }
-        
-        return JSONResponse(
+        logger.error(f"❌ General error: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(
             status_code=500,
-            content=error_detail
+            detail={"error": str(e), "request_id": request_id}
         )
 
 @app.get("/")
