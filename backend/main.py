@@ -67,6 +67,9 @@ async def convert_document(file: UploadFile = File(...)):
         )
 
     try:
+        # Log OpenAI key details (first 8 chars only)
+        logger.info(f"Using OpenAI key starting with: {openai_key[:8]}...")
+        
         # Log file details
         logger.info(f"File received: {file.filename} ({file.content_type})")
         
@@ -81,12 +84,17 @@ async def convert_document(file: UploadFile = File(...)):
 
         # Process with zerox
         logger.info(f"Starting zerox processing with model: gpt-4o-mini")
-        result = await zerox(
-            file_path=file_path,
-            model="gpt-4o-mini",
-            openai_api_key=openai_key,
-            cleanup=True
-        )
+        try:
+            result = await zerox(
+                file_path=file_path,
+                model="gpt-4o-mini",
+                openai_api_key=openai_key,
+                cleanup=True,
+                debug=True  # Enable debug mode
+            )
+        except Exception as zerox_error:
+            logger.error(f"Zerox processing error: {str(zerox_error)}")
+            raise
         
         # Generate response
         markdown = "\n\n".join(page.content for page in result.pages)
@@ -167,3 +175,31 @@ async def process_file(file: UploadFile):
             status_code=500, 
             detail={"error": str(e), "traceback": traceback.format_exc()}
         )
+
+@app.get("/test-openai")
+async def test_openai():
+    try:
+        from openai import OpenAI
+        
+        client = OpenAI(api_key=openai_key)
+        logger.info("Testing OpenAI connection...")
+        
+        # Test with a simple completion
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": "Hello"}]
+        )
+        
+        return {
+            "status": "ok",
+            "message": "OpenAI API key is working",
+            "model": "gpt-4o-mini",
+            "response": response.choices[0].message.content
+        }
+    except Exception as e:
+        logger.error(f"OpenAI test failed: {str(e)}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "OpenAI API key test failed"
+        }
